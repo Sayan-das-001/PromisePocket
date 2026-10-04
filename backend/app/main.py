@@ -2,7 +2,7 @@ import os
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -123,7 +123,7 @@ if frontend_dist_path:
     async def serve_spa_frontend(full_path: str):
         # Allow /docs, /openapi.json, /api to pass through
         if full_path.startswith("api") or full_path.startswith("docs") or full_path.startswith("openapi.json"):
-            return None
+            raise HTTPException(status_code=404, detail="Not Found")
         file_path = os.path.join(frontend_dist_path, full_path)
         if os.path.exists(file_path) and os.path.isfile(file_path):
             return FileResponse(file_path)
