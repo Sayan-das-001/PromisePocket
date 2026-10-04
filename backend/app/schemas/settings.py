@@ -13,6 +13,8 @@ class SettingsUpdate(BaseModel):
 class IntegrationHealthResponse(BaseModel):
     ollama_connected: bool
     ollama_model: Optional[str] = None
+    groq_gemma_connected: Optional[bool] = False
+    groq_model: Optional[str] = None
     mongodb_connected: bool
     mongodb_database: Optional[str] = None
     temporal_connected: bool

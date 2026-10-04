@@ -1,5 +1,44 @@
 // Audio recording and Web Speech API helper
 
+export class BrowserSpeechRecognizer {
+  private recognition: any = null;
+  public isSupported: boolean = false;
+
+  constructor() {
+    const SpeechRec = typeof window !== 'undefined' && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+    if (SpeechRec) {
+      this.isSupported = true;
+      this.recognition = new SpeechRec();
+      this.recognition.continuous = false;
+      this.recognition.interimResults = false;
+      this.recognition.lang = 'en-US';
+    }
+  }
+
+  listen(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      if (!this.recognition) {
+        reject(new Error('Browser speech recognition not supported'));
+        return;
+      }
+      this.recognition.onresult = (event: any) => {
+        const text = event.results[0][0].transcript;
+        resolve(text);
+      };
+      this.recognition.onerror = (event: any) => {
+        reject(new Error(event.error || 'Speech recognition error'));
+      };
+      this.recognition.start();
+    });
+  }
+
+  stop() {
+    if (this.recognition) {
+      this.recognition.stop();
+    }
+  }
+}
+
 export class AudioRecorder {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];

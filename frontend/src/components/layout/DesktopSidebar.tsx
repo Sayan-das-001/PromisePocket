@@ -96,7 +96,7 @@ export const DesktopSidebar: React.FC = () => {
             <div className="flex items-center gap-1.5">
               <Cpu className="w-3 h-3 text-[#FF986F]" />
               <span>Gemma AI</span>
-              <span className={`w-1.5 h-1.5 rounded-full ml-auto ${health?.ollama_connected ? 'bg-[#27AE60]' : 'bg-[#E67E22]'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ml-auto ${health?.ollama_connected || health?.groq_gemma_connected ? 'bg-[#27AE60]' : 'bg-[#E67E22]'}`} />
             </div>
 
             <div className="flex items-center gap-1.5">

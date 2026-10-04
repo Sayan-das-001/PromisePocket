@@ -138,6 +138,8 @@ export interface DashboardSummary {
 export interface IntegrationHealth {
   ollama_connected: boolean;
   ollama_model?: string;
+  groq_gemma_connected?: boolean;
+  groq_model?: string;
   mongodb_connected: boolean;
   mongodb_database?: string;
   temporal_connected: boolean;

@@ -66,5 +66,19 @@ def get_notification_repository() -> INotificationRepository:
 
 
 def reset_memory_demo(user_id: str):
-    _memory_commitments.reset_demo(user_id)
-    _memory_people.reset_demo(user_id)
+    db = get_database()
+    if db and is_mongo_connected():
+        from app.services.demo_data import generate_demo_dataset
+        db.commitments.delete_many({"user_id": user_id})
+        db.people.delete_many({"user_id": user_id})
+        db.notifications.delete_many({"user_id": user_id})
+        demo = generate_demo_dataset(user_id)
+        if demo["people"]:
+            db.people.insert_many([{**p, "_id": p["id"]} for p in demo["people"]])
+        if demo["commitments"]:
+            db.commitments.insert_many([{**c, "_id": c["id"]} for c in demo["commitments"]])
+        if demo["notifications"]:
+            db.notifications.insert_many([{**n, "_id": n["id"]} for n in demo["notifications"]])
+    else:
+        _memory_commitments.reset_demo(user_id)
+        _memory_people.reset_demo(user_id)

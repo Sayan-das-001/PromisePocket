@@ -51,3 +51,13 @@ Last updated: 2026-10-04 (Antigravity Autonomous Engineering Team)
 - [x] Environment variable documentation (`.env.example`)
 - [x] Comprehensive setup guides in `docs/` (`ARCHITECTURE.md`, `SETUP.md`, `AI_AND_PRIVACY.md`, `MONGODB_SETUP.md`, `TEMPORAL_SETUP.md`, `ELEVENLABS_SETUP.md`, `RENDER_DEPLOYMENT.md`, `API.md`, `DEMO_SCRIPT.md`)
 - [x] Automated test suite in `backend/app/tests/`
+
+## Phase 8: 100% Free Cloud Deployment Architecture ($0.00 / month)
+- [x] Verified user credentials configured in `backend/.env` (MongoDB Atlas cluster & ElevenLabs API key)
+- [x] Removed paid Render Background Worker ($7/mo) from `render.yaml` — replaced with in-process reminder engine inside FastAPI lifespan
+- [x] Embedded durable reminder task inside FastAPI web service (`app/services/reminders/in_process_engine.py`) to poll and deliver MongoDB Atlas reminders for free
+- [x] Added `dnspython` and `certifi` to `requirements.txt` to ensure TLS certificate verification with MongoDB Atlas on Render/Linux
+- [x] Auto-seeding mechanism for new MongoDB Atlas clusters on startup (`_seed_initial_demo_if_empty`)
+- [x] Added `GroqGemmaProvider` for 100% free cloud open-weight Gemma 2 9B-IT inference without expensive GPU hosting
+- [x] Added client-side `BrowserSpeechRecognizer` for 100% free zero-latency speech-to-text in browser
+- [x] Added single-service multi-stage `Dockerfile` to allow deploying the full stack on a single free Render Web Service

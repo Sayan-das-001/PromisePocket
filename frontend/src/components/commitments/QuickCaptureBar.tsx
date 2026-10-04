@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mic, MicOff, Send, Sparkles, Loader2 } from 'lucide-react';
-import { AudioRecorder } from '../../lib/speech';
+import { AudioRecorder, BrowserSpeechRecognizer } from '../../lib/speech';
 import { api } from '../../lib/api';
 import { CommitmentProposal } from '../../types';
 import { useAuth } from '../../context/AuthContext';
@@ -22,12 +22,30 @@ export const QuickCaptureBar: React.FC<QuickCaptureBarProps> = ({
   const { toast, error } = useToast();
 
   const handleStartRecording = async () => {
+    const browserRec = new BrowserSpeechRecognizer();
+    if (browserRec.isSupported) {
+      try {
+        setIsRecording(true);
+        toast('Listening...', 'Speak your promise clearly', 'info');
+        const recognizedText = await browserRec.listen();
+        if (recognizedText) {
+          setText(recognizedText);
+          toast('Speech transcribed!', 'Review and press extract', 'success');
+        }
+        setIsRecording(false);
+        return;
+      } catch (e: any) {
+        setIsRecording(false);
+        // Fallback to recorder if interrupted
+      }
+    }
+
     try {
       const rec = new AudioRecorder();
       await rec.start();
       setRecorder(rec);
       setIsRecording(true);
-      toast('Listening...', 'Speak your promise clearly', 'info');
+      toast('Recording...', 'Speak your promise naturally', 'info');
     } catch (err: any) {
       error('Microphone error', err.message);
     }

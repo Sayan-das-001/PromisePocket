@@ -203,16 +203,24 @@ export const SettingsPage: React.FC = () => {
               </span>
               <span
                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  health?.ollama_connected
+                  health?.ollama_connected || health?.groq_gemma_connected
                     ? 'bg-[#EAF7ED] text-[#27AE60]'
                     : 'bg-[#FFF6E5] text-[#D35400]'
                 }`}
               >
-                {health?.ollama_connected ? 'Connected' : 'Mock/Demo Active'}
+                {health?.ollama_connected
+                  ? 'Ollama Local Active'
+                  : health?.groq_gemma_connected
+                  ? 'Gemma Cloud Active'
+                  : 'Smart Extractor Active'}
               </span>
             </div>
             <p className="text-[#898487]">
-              Provider: Ollama / Gemma 2B-IT / 7B-IT. Extracts commitments and reasons with strict privacy.
+              {health?.groq_gemma_connected
+                ? 'Gemma 2 9B-IT running in cloud at zero cost.'
+                : health?.ollama_connected
+                ? 'Local Ollama Gemma model with 100% offline privacy.'
+                : 'Deterministic open-weight extraction engine active.'}
             </p>
           </div>
 

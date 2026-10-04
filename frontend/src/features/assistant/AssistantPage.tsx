@@ -20,7 +20,7 @@ import { ChatMessage, CommitmentProposal } from '../../types';
 import { api } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { AudioRecorder, speakText, stopSpeaking } from '../../lib/speech';
+import { AudioRecorder, BrowserSpeechRecognizer, speakText, stopSpeaking } from '../../lib/speech';
 import { ProposalCard } from '../../components/commitments/ProposalCard';
 import { EditCommitmentModal } from '../../components/commitments/EditCommitmentModal';
 import { format } from 'date-fns';
@@ -62,12 +62,30 @@ export const AssistantPage: React.FC = () => {
 
   // Voice recording handlers
   const handleStartRecording = async () => {
+    const browserRec = new BrowserSpeechRecognizer();
+    if (browserRec.isSupported) {
+      try {
+        setIsRecording(true);
+        toast('Listening...', 'Speak your promise clearly', 'info');
+        const recognizedText = await browserRec.listen();
+        if (recognizedText) {
+          setInputText(recognizedText);
+          toast('Speech transcribed!', 'Review and press send', 'success');
+        }
+        setIsRecording(false);
+        return;
+      } catch (e: any) {
+        setIsRecording(false);
+        // Fallback to audio recorder if native recognition was interrupted
+      }
+    }
+
     try {
       const rec = new AudioRecorder();
       await rec.start();
       setRecorder(rec);
       setIsRecording(true);
-      toast('Listening...', 'Speak your promise naturally', 'info');
+      toast('Recording...', 'Speak your promise naturally', 'info');
     } catch (err: any) {
       error('Microphone error', err.message);
     }

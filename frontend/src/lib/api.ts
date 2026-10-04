@@ -8,7 +8,8 @@ import {
   User,
 } from '../types';
 
-const API_BASE = '/api';
+const envApiUrl = import.meta.env.VITE_API_URL;
+const API_BASE = envApiUrl ? `${envApiUrl.replace(/\/$/, '')}/api` : '/api';
 
 class ApiClient {
   private token: string | null = null;
@@ -273,7 +274,8 @@ class ApiClient {
 
   async getHealth(): Promise<IntegrationHealth> {
     try {
-      const response = await fetch('/health');
+      const healthUrl = envApiUrl ? `${envApiUrl.replace(/\/$/, '')}/health` : '/health';
+      const response = await fetch(healthUrl);
       if (response.ok) return await response.json();
     } catch {
       // fallback

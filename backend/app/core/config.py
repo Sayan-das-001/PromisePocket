@@ -9,12 +9,14 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     SECRET_KEY: str = "promisepocket_secret_key_change_in_production_jwt_signing_key_32chars"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
-    ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
+    ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,*"
 
-    # AI
-    AI_PROVIDER: str = "ollama"  # "ollama", "remote", "demo"
+    # AI - Gemma (Ollama Local or Groq Free Cloud or Deterministic)
+    AI_PROVIDER: str = "ollama"  # "ollama", "groq", "demo"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "gemma:2b"
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "gemma2-9b-it"
     AI_REQUEST_TIMEOUT_SECONDS: int = 60
     AI_MAX_RETRIES: int = 2
 
@@ -38,6 +40,8 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> List[str]:
+        if not self.ALLOWED_ORIGINS or self.ALLOWED_ORIGINS.strip() == "*":
+            return ["*"]
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
 
     class Config:

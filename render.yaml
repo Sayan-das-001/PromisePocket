@@ -1,8 +1,12 @@
+# Render Infrastructure Blueprint — 100% FREE Tier Configuration
+# Zero Paid Services Required ($0.00 / month)
+
 services:
-  # 1. Frontend Web Service / Static Site
+  # 1. Frontend: 100% FREE Static Site (Unlimited Bandwidth, Free SSL & CDN)
   - type: web
     name: promisepocket-frontend
     runtime: static
+    plan: free
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/dist
     routes:
@@ -11,12 +15,16 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        value: https://promisepocket-api.onrender.com
+        fromService:
+          type: web
+          name: promisepocket-backend
+          property: host
 
-  # 2. FastAPI Backend Web Service
+  # 2. Backend: 100% FREE Web Service (FastAPI + Embedded Durable Reminders)
   - type: web
     name: promisepocket-backend
     runtime: python
+    plan: free
     buildCommand: cd backend && pip install -r requirements.txt
     startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
@@ -25,41 +33,21 @@ services:
         value: production
       - key: SECRET_KEY
         generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      # Gemma AI Provider (Ollama, Groq Free Cloud, or Built-in Deterministic)
       - key: AI_PROVIDER
         value: demo
-      - key: OLLAMA_BASE_URL
-        value: http://localhost:11434
-      - key: OLLAMA_MODEL
-        value: gemma:2b
+      # Optional: Add free Groq API key for cloud Gemma 2 inference at 0 cost
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: gemma2-9b-it
+      # MongoDB Atlas Free M0 Shared Cluster
       - key: MONGODB_URI
         sync: false
       - key: MONGODB_DATABASE
         value: promisepocket
+      # Voice AI (Optional)
       - key: ELEVENLABS_API_KEY
         sync: false
-      - key: TEMPORAL_ADDRESS
-        sync: false
-      - key: TEMPORAL_NAMESPACE
-        value: default
-      - key: TEMPORAL_TASK_QUEUE
-        value: promisepocket-reminders
-
-  # 3. Temporal Durable Reminder Background Worker
-  - type: worker
-    name: promisepocket-temporal-worker
-    runtime: python
-    buildCommand: cd backend && pip install -r requirements.txt
-    startCommand: cd backend && python -m app.worker
-    envVars:
-      - key: ENVIRONMENT
-        value: production
-      - key: MONGODB_URI
-        sync: false
-      - key: MONGODB_DATABASE
-        value: promisepocket
-      - key: TEMPORAL_ADDRESS
-        sync: false
-      - key: TEMPORAL_NAMESPACE
-        value: default
-      - key: TEMPORAL_TASK_QUEUE
-        value: promisepocket-reminders
