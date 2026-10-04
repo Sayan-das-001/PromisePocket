@@ -100,12 +100,17 @@ class GroqGemmaProvider(BaseAIProvider):
                 ambig_note,
             ) = DateResolver.resolve_date_and_time(raw_time, tz_name=timezone)
 
+            cat = str(item.get("category", "")).lower().strip()
+            valid_cats = {"family", "friendship", "study", "errands", "health", "work", "other"}
+            if cat not in valid_cats:
+                cat = "family" if person else "errands"
+
             proposals.append(
                 CommitmentProposal(
                     proposal_id=str(uuid.uuid4()),
                     title=action,
                     person_name=person,
-                    category=item.get("category", "family"),
+                    category=cat,
                     proposed_date=p_date,
                     proposed_time=p_time,
                     date_precision=precision,

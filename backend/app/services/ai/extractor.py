@@ -35,9 +35,13 @@ class AIExtractorService:
             return [], intent
 
         proposals = await provider.extract_proposals(text, timezone=timezone)
-        # If model returned empty, run deterministic extractor
+        mock_proposals = await self._mock_provider.extract_proposals(text, timezone=timezone)
+        # If model returned empty or missed distinct clauses connected by 'and'
         if not proposals:
-            proposals = await self._mock_provider.extract_proposals(text, timezone=timezone)
+            proposals = mock_proposals
+        elif len(mock_proposals) > len(proposals):
+            # Multi-clause hybrid fallback ensures no promises are dropped
+            proposals = mock_proposals
 
         return proposals, intent
 

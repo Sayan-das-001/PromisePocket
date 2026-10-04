@@ -130,8 +130,13 @@ class DateResolver:
 
         # If date is not resolved at all
         if not proposed_date:
-            precision = "unresolved"
-            is_ambiguous = True
-            ambiguity_note = "No specific date or day was mentioned."
+            if proposed_time:
+                # If a time period was recognized (e.g. "after class", "evening"), default date to today
+                proposed_date = now.strftime("%Y-%m-%d")
+            else:
+                precision = "unresolved"
+                is_ambiguous = True
+                if not ambiguity_note:
+                    ambiguity_note = "No specific date or day was mentioned."
 
         return proposed_date, proposed_time, precision, recurrence_rule, is_ambiguous, ambiguity_note

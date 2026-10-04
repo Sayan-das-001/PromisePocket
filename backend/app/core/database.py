@@ -18,37 +18,55 @@ def connect_to_mongo() -> bool:
         _is_connected = False
         return False
 
+    connection_configs = [
+        # Strategy 1: Standard Atlas TLS with certifi and OCSP check disabled (avoids cloud network OCSP blocks)
+        {"tlsDisableOCSPEndpointCheck": True, "tls": True},
+        # Strategy 2: Permissive TLS (handles cloud container intermediate cert discrepancies)
+        {"tlsDisableOCSPEndpointCheck": True, "tls": True, "tlsAllowInvalidCertificates": True},
+    ]
+
     try:
-        logger.info("Connecting to MongoDB Atlas at %s...", settings.MONGODB_URI.split("@")[-1] if "@" in settings.MONGODB_URI else "URI")
-        
-        client_kwargs = {
-            "serverSelectionTimeoutMS": settings.MONGODB_SERVER_SELECTION_TIMEOUT_MS,
-            "appname": "PromisePocket",
-        }
-        
+        import certifi
+        ca_file = certifi.where()
+    except Exception:
+        ca_file = None
+
+    last_error = None
+    for idx, config in enumerate(connection_configs):
         try:
-            import certifi
-            client_kwargs["tlsCAFile"] = certifi.where()
-        except Exception:
-            pass
+            client_kwargs = {
+                "serverSelectionTimeoutMS": settings.MONGODB_SERVER_SELECTION_TIMEOUT_MS,
+                "appname": "PromisePocket",
+                **config,
+            }
+            if ca_file and not config.get("tlsAllowInvalidCertificates"):
+                client_kwargs["tlsCAFile"] = ca_file
 
-        _mongo_client = MongoClient(settings.MONGODB_URI, **client_kwargs)
-        # Verify connection
-        _mongo_client.admin.command("ping")
-        _database = _mongo_client[settings.MONGODB_DATABASE]
-        _is_connected = True
-        logger.info("Successfully connected to MongoDB Atlas database: %s", settings.MONGODB_DATABASE)
+            client = MongoClient(settings.MONGODB_URI, **client_kwargs)
+            client.admin.command("ping")
+            _mongo_client = client
+            _database = _mongo_client[settings.MONGODB_DATABASE]
+            _is_connected = True
+            logger.info("Successfully connected to MongoDB Atlas database: %s", settings.MONGODB_DATABASE)
 
-        # Initialize indexes
-        _setup_indexes(_database)
-        _seed_initial_demo_if_empty(_database)
-        return True
-    except Exception as e:
-        logger.warning("MongoDB Atlas connection attempt encountered issue (%s). Using fallback memory store.", str(e))
-        _is_connected = False
-        _mongo_client = None
-        _database = None
-        return False
+            # Initialize indexes
+            _setup_indexes(_database)
+            _seed_initial_demo_if_empty(_database)
+            return True
+        except Exception as e:
+            last_error = e
+            logger.warning("MongoDB Atlas connection attempt %d encountered issue: %s", idx + 1, str(e))
+
+    logger.warning(
+        "MongoDB Atlas connection failed (%s). "
+        "NOTE: Ensure 0.0.0.0/0 is whitelisted in MongoDB Atlas Network Access. "
+        "Running in fallback memory store mode.",
+        str(last_error),
+    )
+    _is_connected = False
+    _mongo_client = None
+    _database = None
+    return False
 
 
 def _setup_indexes(db: Database) -> None:

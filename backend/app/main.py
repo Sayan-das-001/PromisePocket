@@ -2,7 +2,7 @@ import os
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -99,6 +99,16 @@ async def health_check():
         render_ready=True,
         mode="production" if is_mongo_connected() else "demo",
     )
+
+
+@app.head("/health", include_in_schema=False)
+async def head_health():
+    return Response(status_code=200)
+
+
+@app.head("/", include_in_schema=False)
+async def head_root():
+    return Response(status_code=200)
 
 
 @app.get("/ready", tags=["Health"])

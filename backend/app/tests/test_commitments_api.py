@@ -56,16 +56,21 @@ async def test_commitments_crud():
 async def test_user_ownership_isolation():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        # Create user A
-        token_a = create_access_token("user-a")
+        # Register User A
+        res_reg_a = await client.post(
+            "/api/auth/register",
+            json={"email": "alice@example.com", "password": "password123", "display_name": "Alice"},
+        )
+        assert res_reg_a.status_code == 200
+        token_a = res_reg_a.json()["access_token"]
         headers_a = {"Authorization": f"Bearer {token_a}"}
 
         # User A creates a commitment
         res_a = await client.post(
             "/api/commitments",
             json={
-                "title": "Secret promise of User A",
-                "category": "personal",
+                "title": "Secret promise of Alice",
+                "category": "family",
                 "status": "pending",
                 "timezone": "Asia/Kolkata",
                 "date_precision": "exact_time",
@@ -74,12 +79,19 @@ async def test_user_ownership_isolation():
             },
             headers=headers_a,
         )
+        assert res_a.status_code == 201
         comm_a_id = res_a.json()["id"]
 
-        # User B attempts to access User A's commitment
-        token_b = create_access_token("user-b")
+        # Register User B
+        res_reg_b = await client.post(
+            "/api/auth/register",
+            json={"email": "bob@example.com", "password": "password123", "display_name": "Bob"},
+        )
+        assert res_reg_b.status_code == 200
+        token_b = res_reg_b.json()["access_token"]
         headers_b = {"Authorization": f"Bearer {token_b}"}
 
+        # User B attempts to access User A's commitment
         res_b = await client.get(f"/api/commitments/{comm_a_id}", headers=headers_b)
         # Must return 404 Not Found to enforce multi-tenant isolation
         assert res_b.status_code == 404
