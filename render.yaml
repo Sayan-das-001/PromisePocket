@@ -1,0 +1,65 @@
+services:
+  # 1. Frontend Web Service / Static Site
+  - type: web
+    name: promisepocket-frontend
+    runtime: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://promisepocket-api.onrender.com
+
+  # 2. FastAPI Backend Web Service
+  - type: web
+    name: promisepocket-backend
+    runtime: python
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: AI_PROVIDER
+        value: demo
+      - key: OLLAMA_BASE_URL
+        value: http://localhost:11434
+      - key: OLLAMA_MODEL
+        value: gemma:2b
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DATABASE
+        value: promisepocket
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: TEMPORAL_ADDRESS
+        sync: false
+      - key: TEMPORAL_NAMESPACE
+        value: default
+      - key: TEMPORAL_TASK_QUEUE
+        value: promisepocket-reminders
+
+  # 3. Temporal Durable Reminder Background Worker
+  - type: worker
+    name: promisepocket-temporal-worker
+    runtime: python
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: cd backend && python -m app.worker
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DATABASE
+        value: promisepocket
+      - key: TEMPORAL_ADDRESS
+        sync: false
+      - key: TEMPORAL_NAMESPACE
+        value: default
+      - key: TEMPORAL_TASK_QUEUE
+        value: promisepocket-reminders
